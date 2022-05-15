@@ -12,10 +12,8 @@ function getOrThrow(key: string): string {
 
 export default  {
     port: getOrThrow('PORT'),
-    bot: getOrThrow('BOT_TOKEN'),
-    mongo: getOrThrow('MONGO_URI'),
-    backend: getOrThrow('BACKEND_URL'),
-    chat: getOrThrow('CHAT_ID'),
-    target: getOrThrow('TARGET_CHAT')
+    contract: getOrThrow('CONTRACT'),
+    node: getOrThrow('RPC_NODE'),
+    mongo_uri: getOrThrow('MONGO_URI'),
 }
 
