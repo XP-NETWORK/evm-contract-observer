@@ -2,7 +2,7 @@
 import mongoose from "mongoose";    
 import config from "./config";
 import { ethers, providers} from "ethers";
-import { WorkerData } from "./types";
+import { WorkerData, ContractStruct } from "./types";
 import IndexUpdater from './services/indexUpdater'
 import abi from "./constants/abi";
 const util = require('util')
@@ -24,7 +24,20 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
   const provider = new providers.JsonRpcProvider(config.node);
 
-  const contract = args.contract.toLowerCase();
+  const contracts:ContractStruct = Object.keys(args.contracts).reduce((acc, cur) => {
+       return {
+           ...acc,
+           [cur.toLowerCase()]: args.contracts[cur]
+       } 
+  }, {});
+
+
+  Object.keys(contracts).forEach(contract => {
+      contracts[contract]._contract = new ethers.Contract(contract, abi.abi, provider)
+  })
+
+
+  //const contractSet = Object.keys(contracts).map();
 
   const interval = args.interval * 1000;
 
@@ -32,15 +45,16 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
   const chainId = args.chainId;
 
-  const indexUpdater = IndexUpdater(args);
+
+  const indexUpdater = IndexUpdater();
 
  
 
 
   setTimeout(async () => {
 
-    let blockNum =  await provider.getBlockNumber() ;
-    const _contract = new ethers.Contract(args.contract, abi.abi, provider)
+    let blockNum =  await provider.getBlockNumber().catch(e => process.exit());
+    
 
     setInterval(async () => {
 
@@ -50,36 +64,27 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
         try {
 
-        //const blockNum = block? block : await provider.getBlockNumber() ;
-        console.log('parsing block ', blockNum, ` - ${args.name}(${args.symbol})`);
+        
+        console.log('parsing block ', block? block : blockNum);
 
             
         let trxs = (await provider.getBlockWithTransactions(block? block : blockNum)).transactions;
 
-        const newBlock =  await provider.getBlockNumber();
+        const newBlock =  await provider.getBlockNumber().catch(e => blockNum + 1);
 
         blockNum = blockNum + 1 > newBlock? newBlock: blockNum + 1;
 
-        const toUpdate: { tokenId: string; owner: string }[] = [];
+        const toUpdate: { tokenId: string; owner: string, contract: string }[] = [];
         const toDecode: ethers.providers.TransactionResponse[] = [];
         
         for (const trx of trxs) {
-         
-            /*if (trx.to?.toLowerCase() === contract) {
+            /*
               const inputs = ethers.utils.defaultAbiCoder.decode(
                 ["address", "address", "uint256"],
                 ethers.utils.hexDataSlice(trx.data, 4)
               );
-              console.log(inputs);
-              toUpdate.push({
-                tokenId: inputs[2].toString(),
-                owner: inputs[1].toLowerCase(),
-              });
-            }  
-            
-            else {*/
+            */
               toDecode.push(trx);
-           // }
           }
     
 
@@ -92,7 +97,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
          
     
           reps = reps.filter((rep) =>
-            rep.logs.find((log) => log.address.toLowerCase() === contract)
+            rep.logs.find((log) => Object.keys(contracts).includes(log.address.toLowerCase()))
           );
 
        
@@ -100,7 +105,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
           for (const rep of reps) {
         
             const transfers = rep?.logs.filter(
-              (log) => log.address.toLowerCase() === contract
+              (log) => Object.keys(contracts).includes(log.address.toLowerCase())
             ).filter(l => l.topics[0].toLowerCase() === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'.toLowerCase());
 
    
@@ -115,13 +120,14 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
                         owner: ethers.utils.defaultAbiCoder
                           .decode(["address"], transfer?.topics[2])[0]
                           .toLowerCase(),
+                          contract: transfer.address.toLowerCase()
                       });
                 }
              
             }
           }
 
-          console.log(`Found ${toUpdate.length} nft of ${args.name}(${args.symbol})`);
+          console.log(`Found ${toUpdate.length}`);
           if (toUpdate.length) {
               console.log(toUpdate);
           }
@@ -130,7 +136,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
           for (const nft of toUpdate) {
              
             const doc = await indexUpdater.findOne({
-                contract,
+                contract: nft.contract,
                 chainId,
                 tokenId: nft.tokenId
             })
@@ -141,10 +147,14 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
             } 
 
             await indexUpdater.create({
+                name: contracts[nft.contract].name,
+                symbol:  contracts[nft.contract].symbol,
                 owner: nft.owner,
-                uri: doc? doc.uri: (await _contract.tokenURI(parseInt(nft.tokenId)).catch((e) => '')),
+                uri: doc? doc.uri: (await contracts[nft.contract]?._contract?.tokenURI(parseInt(nft.tokenId)).catch((e) => '')),
                 chainId,
-                tokenId: nft.tokenId
+                contract: nft.contract,
+                tokenId: nft.tokenId,
+                contractType: 'ERC721'
             })
               
           }

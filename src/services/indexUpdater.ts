@@ -18,7 +18,11 @@ interface INFTdoc {
     tokenId: string;
     owner: string;
     chainId: string;
-    uri: string
+    uri: string;
+    name: string;
+    symbol: string;
+    contractType: string;
+    contract: string
 }
 
 const schema = new mongoose.Schema({
@@ -38,10 +42,8 @@ const schema = new mongoose.Schema({
 
 class IndexUpdater {
 
-    _data:WorkerData;
-
-    constructor (data: WorkerData) {
-        this._data = data
+    constructor () {
+      
     }
 
     async find(query: Idoc): Promise<Idoc[]> {
@@ -67,24 +69,24 @@ class IndexUpdater {
 
     async create(doc: INFTdoc): Promise<void> {
           await new IndexDoc({
-            name: this._data.name,
-            symbol:  this._data.symbol,
+            name: doc.name,
+            symbol:  doc.symbol,
             tokenId: doc.tokenId,
             owner: doc.owner,
             chainId: doc.chainId || '20',
             contractType: "ERC721",
             uri: doc.uri,
-            contract: this._data.contract
+            contract: doc.contract
           }).save().catch((e) => console.log(e, 'on ceation'));
     }
 
     async createMany(docs: INFTdoc[]): Promise<void> {
         await IndexDoc.insertMany(docs.map((doc) => ({
             ...doc,
-            name: this._data.name,
-            symbol:  this._data.symbol,
+            name: doc.name,
+            symbol:  doc.symbol,
             contractType: "ERC721",//?????
-            contract: this._data.contract
+            contract: doc.contract
         }))).catch((e) => console.log(e,'on creating bunch'))
 
     }
@@ -95,7 +97,7 @@ class IndexUpdater {
 
 }
 
-export default (data: WorkerData) => new IndexUpdater(data)
+export default () => new IndexUpdater()
 export type {
     IndexUpdater
 }
