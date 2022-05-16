@@ -141,7 +141,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
               
           }
 
-          process.exit()
+
 
         } catch (e) {
             process.exit()
