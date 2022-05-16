@@ -13,7 +13,7 @@ const app = express();
 
 app.listen(config.port || 3100, async () => {
 
-  runWorker({contract: '0x0c5ab026d74c451376a4798342a685a0e99a5bee', timeout: .5, interval: 5,name: 'MachineFi NFT', symbol: 'MFI', chainId: '20' });
+  runWorker({contract: '0x0c5ab026d74c451376a4798342a685a0e99a5bee', timeout: .5, interval: 5 ,name: 'MachineFi NFT', symbol: 'MFI', chainId: '20' });
 
 })
 

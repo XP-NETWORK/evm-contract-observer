@@ -40,10 +40,11 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
   setTimeout(async () => {
 
     let blockNum =  await provider.getBlockNumber() ;
+    const _contract = new ethers.Contract(args.contract, abi.abi, provider)
 
     setInterval(async () => {
 
-        const _contract = new ethers.Contract(args.contract, abi.abi, provider)
+       
         //console.log(await _contract.ownerOf(795).catch((e) => ''));
       
 
@@ -54,7 +55,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
             
         let trxs = (await provider.getBlockWithTransactions(block? block : blockNum)).transactions;
-        
+
         const newBlock =  await provider.getBlockNumber();
 
         blockNum = blockNum + 1 > newBlock? newBlock: blockNum + 1;
