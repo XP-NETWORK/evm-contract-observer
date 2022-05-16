@@ -25,7 +25,10 @@ app.listen(config.port || 3100, async () => {
 function runWorker(data: WorkerData) {
   let worker = fork('lib/worker', [JSON.stringify(data)]);
   worker.addListener('exit', (code) => {
-    runWorker(data)
+    runWorker({
+      ...data,
+      timeout: 0
+    })
   })
 }
 

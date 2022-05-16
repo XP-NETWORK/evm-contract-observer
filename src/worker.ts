@@ -152,6 +152,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
      
 
         } catch (e) {
+            console.log(e,'error');
             process.exit()
         }
 
@@ -163,3 +164,5 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
 
   }, (timeout + Math.random()) * 1000)
+
+  setTimeout(() => process.exit(), 1000 * 60 * 30)
