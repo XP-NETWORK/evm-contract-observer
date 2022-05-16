@@ -37,8 +37,9 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
  
 
 
-  setTimeout(() => {
+  setTimeout(async () => {
 
+    let blockNum =  await provider.getBlockNumber() ;
 
     setInterval(async () => {
 
@@ -48,9 +49,15 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
         try {
 
-        const blockNum = block? block : await provider.getBlockNumber() ;
+        //const blockNum = block? block : await provider.getBlockNumber() ;
         console.log('parsing block ', blockNum, ` - ${args.name}(${args.symbol})`);
-        let trxs = (await provider.getBlockWithTransactions(blockNum)).transactions;
+
+            
+        let trxs = (await provider.getBlockWithTransactions(block? block : blockNum)).transactions;
+        
+        const newBlock =  await provider.getBlockNumber();
+
+        blockNum = blockNum + 1 > newBlock? newBlock: blockNum + 1;
 
         const toUpdate: { tokenId: string; owner: string }[] = [];
         const toDecode: ethers.providers.TransactionResponse[] = [];
@@ -141,7 +148,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
               
           }
 
-
+     
 
         } catch (e) {
             process.exit()
