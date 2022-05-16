@@ -12,7 +12,6 @@ function getOrThrow(key: string): string {
 
 export default  {
     port: getOrThrow('PORT'),
-    contract: getOrThrow('CONTRACT'),
     node: getOrThrow('RPC_NODE'),
     mongo_uri: getOrThrow('MONGO_URI'),
 }
