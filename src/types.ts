@@ -2,11 +2,12 @@ import { ethers } from "ethers";
 
 
 export interface WorkerData {
+  rpc: string,
   contracts: ContractStruct;
   timeout: number;
   interval: number;
   chainId: string;
-  block?:number
+  block?:number;
 }
 
 

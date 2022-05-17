@@ -22,7 +22,9 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
   const timeout = args.timeout;
 
-  const provider = new providers.JsonRpcProvider(config.node);
+  const node_url = args.rpc
+
+  const provider = new providers.JsonRpcProvider(node_url);
 
   const contracts:ContractStruct = Object.keys(args.contracts).reduce((acc, cur) => {
        return {
@@ -54,12 +56,13 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
   setTimeout(async () => {
 
     let blockNum =  await provider.getBlockNumber().catch(e => process.exit());
-    
+
+
 
     setInterval(async () => {
 
-       
-        //console.log(await _contract.ownerOf(795).catch((e) => ''));
+       //@ts-ignore
+        //console.log(await contracts['0x8CcE8534CBF12F53bb87347Ead905DE30793Cd4B'.toLowerCase()]._contract.ownerOf(209).catch((e) => ''));
       
 
         try {
@@ -94,12 +97,13 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
             })
           );
 
-         
+        
     
           reps = reps.filter((rep) =>
             rep.logs.find((log) => Object.keys(contracts).includes(log.address.toLowerCase()))
           );
 
+       
        
     
           for (const rep of reps) {
@@ -132,9 +136,9 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
               console.log(toUpdate);
           }
 
-
+          if (!args.block) {
           for (const nft of toUpdate) {
-             
+    
             const doc = await indexUpdater.findOne({
                 contract: nft.contract,
                 chainId,
@@ -158,7 +162,7 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
             })
               
           }
-
+        }
      
 
         } catch (e) {
@@ -175,4 +179,4 @@ dotenv.config({ path: path.resolve(__dirname, ".env") });
 
   }, (timeout + Math.random()) * 1000)
 
-  setTimeout(() => process.exit(), 1000 * 60 * 30)
+  setTimeout(() => process.exit(), 1000 * 60 * 60)
